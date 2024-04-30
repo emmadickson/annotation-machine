@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "Link Highlighter",
+    "description": "This extension highlights all links in red.",
+    "version": "1.0",
+    "permissions": ["activeTab"],
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"],
+            "css": ["style.css"]
+
+        }
+    ]
+
+}

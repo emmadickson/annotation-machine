@@ -1,0 +1,17 @@
+a {
+    position: relative; /* Essential for positioning the pseudo-element */
+    display: inline-block; /* Ensures the pseudo-element can be sized correctly */
+    overflow: hidden; /* Prevents the pseudo-element from spilling outside the link */
+}
+
+a::after {
+    content: ''; /* Necessary for the pseudo-element to be generated */
+    position: absolute; /* Position relative to the nearest positioned ancestor */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 0, 0, 0.5); /* Translucent red */
+    pointer-events: none; /* Allows clicks to pass through to the link */
+    z-index: 1; /* Ensures it does not cover the text */
+}
