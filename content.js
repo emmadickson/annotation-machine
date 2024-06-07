@@ -1,4 +1,22 @@
-window.onload = function() {
+// Function to create overlays
+function hexToRgba(hex) {
+    // Remove # if it's there
+    hex = hex.replace('#', '');
+
+    // Parse hex to RGB
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    // Convert RGB to RGBA with the specified alpha (opacity)
+    return `rgba(${r}, ${g}, ${b}, 0.5)`;
+}
+function createOverlays(color) {
+    console.log('Creating overlays...');
+    const highlightColor = hexToRgba(color) || 'rgba(255, 0, 0, 0.5)';
+    console.log('Highlight Color:', highlightColor);
+
     document.querySelectorAll('img[usemap]').forEach(img => {
         const mapName = img.getAttribute('usemap').replace('#', '');
         const map = document.querySelector(`map[name="${mapName}"]`);
@@ -6,6 +24,7 @@ window.onload = function() {
 
         // Create a div to hold overlays
         const overlayDiv = document.createElement('div');
+        overlayDiv.classList.add('overlay-div');
         overlayDiv.style.position = 'absolute';
         overlayDiv.style.left = `${rect.left + window.scrollX}px`;
         overlayDiv.style.top = `${rect.top + window.scrollY}px`;
@@ -25,7 +44,7 @@ window.onload = function() {
                 overlayLink.style.top = `${top}px`;
                 overlayLink.style.width = `${right - left}px`;
                 overlayLink.style.height = `${bottom - top}px`;
-                overlayLink.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+                overlayLink.style.backgroundColor = highlightColor;
                 overlayLink.href = area.href;
                 overlayLink.target = area.target;
                 overlayLink.title = area.alt;
@@ -49,7 +68,7 @@ window.onload = function() {
                 overlayLink.style.top = `${minY}px`;
                 overlayLink.style.width = `${width}px`;
                 overlayLink.style.height = `${height}px`;
-                overlayLink.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+                overlayLink.style.backgroundColor = highlightColor;
                 overlayLink.href = area.href;
                 overlayLink.target = area.target;
                 overlayLink.title = area.alt;
@@ -57,4 +76,28 @@ window.onload = function() {
             }
         });
     });
-};
+}
+
+// Function to remove overlays
+function removeOverlays() {
+    const overlays = document.querySelectorAll('.overlay-div');
+    overlays.forEach(overlay => {
+        overlay.parentNode.removeChild(overlay);
+    });
+}
+
+// Listen for messages from popup or background script
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    if (request.action === 'getStatus') {
+        const status = localStorage.getItem('extensionStatus') || 'off';
+        sendResponse({ status: status });
+    } else if (request.status === 'on') {
+        createOverlays();
+    } else if (request.status === 'off') {
+        removeOverlays();
+    } else if (request.action === 'updateLinkColor') {
+        removeOverlays();
+        console.log('Received color update message:', request.color);
+        createOverlays(request.color); // Pass the color to the createOverlays function
+    }
+});
