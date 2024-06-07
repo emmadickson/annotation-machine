@@ -1,17 +1,4 @@
 // Function to create overlays
-function hexToRgba(hex) {
-    // Remove # if it's there
-    hex = hex.replace('#', '');
-
-    // Parse hex to RGB
-    const bigint = parseInt(hex, 16);
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-
-    // Convert RGB to RGBA with the specified alpha (opacity)
-    return `rgba(${r}, ${g}, ${b}, 0.5)`;
-}
 function createOverlays(color) {
     console.log('Creating overlays...');
     const highlightColor = hexToRgba(color) || 'rgba(255, 0, 0, 0.5)';
@@ -86,6 +73,21 @@ function removeOverlays() {
     });
 }
 
+// Function to convert hex color to RGBA
+function hexToRgba(hex) {
+    // Remove # if it's there
+    hex = hex.replace('#', '');
+
+    // Parse hex to RGB
+    const bigint = parseInt(hex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+
+    // Convert RGB to RGBA with 0.5 alpha (50% opacity)
+    return `rgba(${r}, ${g}, ${b}, 0.5)`;
+}
+
 // Listen for messages from popup or background script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === 'getStatus') {
@@ -99,5 +101,27 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         removeOverlays();
         console.log('Received color update message:', request.color);
         createOverlays(request.color); // Pass the color to the createOverlays function
+    } else if (request.itemList) {
+      const color = localStorage.getItem('highlightColor') || 'rgba(255, 0, 0, 0.5)';
+        createOverlaysForItems(request.itemList, request.color);
     }
 });
+
+function createOverlaysForItems(itemList, color) {
+    itemList.forEach(item => {
+        const elements = document.querySelectorAll(item);
+        elements.forEach(element => {
+            const overlayDiv = document.createElement('div');
+            overlayDiv.classList.add('overlay-div');
+            const highlightColor = hexToRgba(color);
+            overlayDiv.style.backgroundColor = highlightColor;
+            overlayDiv.style.position = 'absolute';
+            overlayDiv.style.left = `${element.offsetLeft}px`;
+            overlayDiv.style.top = `${element.offsetTop}px`;
+            overlayDiv.style.width = `${element.offsetWidth}px`;
+            overlayDiv.style.height = `${element.offsetHeight}px`;
+            overlayDiv.style.zIndex = '9999'; // Ensure the overlay sits on top
+            document.body.appendChild(overlayDiv);
+        });
+    });
+}

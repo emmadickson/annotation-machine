@@ -7,12 +7,11 @@ document.addEventListener('DOMContentLoaded', function () {
         change: function(color) {
             // Save the selected color to localStorage
             localStorage.setItem('highlightColor', color.toHexString());
-            console.log('Before querying tabs');
-          chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-              console.log('Tabs queried');
-              const tab = tabs[0];
-              chrome.tabs.sendMessage(tab.id, { action: 'updateLinkColor', color: color.toHexString() });
-          });
+
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                const tab = tabs[0];
+                chrome.tabs.sendMessage(tab.id, { action: 'updateLinkColor', color: color.toHexString() });
+            });
         }
     });
 
@@ -35,10 +34,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fetch saved color and set the color picker value
     const savedColor = localStorage.getItem('highlightColor');
     if (savedColor) {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-          const tab = tabs[0];
-          chrome.tabs.sendMessage(tab.id, { color: savedColor});
-      });
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            const tab = tabs[0];
+            chrome.tabs.sendMessage(tab.id, { color: savedColor});
+        });
         $('#flat').spectrum('set', savedColor);
     }
+
+    // Listen for changes in the item list
+  $('#itemList').on('keypress', function(event) {
+      if (event.which === 13 || event.keyCode === 13) {
+          // Check if the key pressed is Enter
+          const itemList = $(this).val().split(',').map(item => item.trim());
+          chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+              const tab = tabs[0];
+              chrome.tabs.sendMessage(tab.id, { itemList: itemList, color: savedColor});
+          });
+      }
+  });
 });
