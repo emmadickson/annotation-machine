@@ -149,7 +149,7 @@ function changeOverlayColor(className, color) {
 
 function createOverlaysForItems(itemList, color) {
     // Check if 'usemap' is in the item list
-    const usemapIndex = itemList.indexOf('usemap');
+    const usemapIndex = itemList.indexOf('map');
     if (usemapIndex !== -1) {
         // Run createOverlays
         createOverlays(color);
