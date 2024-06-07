@@ -1,7 +1,12 @@
 // Function to create overlays
 function createOverlays(color) {
     console.log('Creating overlays...');
-    const highlightColor = hexToRgba(color) || 'rgba(255, 0, 0, 0.5)';
+    if (color != undefined){
+      var highlightColor =  hexToRgba(color)
+    }
+    else{
+      var highlightColor = 'rgba(255, 0, 0, 0.5)'
+    }
     console.log('Highlight Color:', highlightColor);
 
     document.querySelectorAll('img[usemap]').forEach(img => {
@@ -65,13 +70,22 @@ function createOverlays(color) {
     });
 }
 
-// Function to remove overlays
-function removeOverlays() {
+function removeOverlayDivas() {
+    const overlays = document.querySelectorAll('.overlay-diva');
+    overlays.forEach(overlay => {
+        overlay.parentNode.removeChild(overlay);
+    });
+
+}
+
+function removeOverlayDivs() {
     const overlays = document.querySelectorAll('.overlay-div');
     overlays.forEach(overlay => {
         overlay.parentNode.removeChild(overlay);
     });
+
 }
+
 
 // Function to convert hex color to RGBA
 function hexToRgba(hex) {
@@ -88,31 +102,68 @@ function hexToRgba(hex) {
     return `rgba(${r}, ${g}, ${b}, 0.5)`;
 }
 
-// Listen for messages from popup or background script
+/// Listen for messages from popup or background script
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    if (request.action === 'getStatus') {
-        const status = localStorage.getItem('extensionStatus') || 'off';
-        sendResponse({ status: status });
-    } else if (request.status === 'on') {
-        createOverlays();
-    } else if (request.status === 'off') {
-        removeOverlays();
+  if (request.action === 'getStatus') {
+      const status = localStorage.getItem('extensionStatus') || 'off';
+      sendResponse({ status: status });
+  } else if (request.status === 'off') {
+      removeOverlayDivas();
+      removeOverlayDivs();
+
     } else if (request.action === 'updateLinkColor') {
-        removeOverlays();
-        console.log('Received color update message:', request.color);
-        createOverlays(request.color); // Pass the color to the createOverlays function
+      const hasOverlayDiv = document.querySelector('.overlay-div') !== null;
+
+      if (hasOverlayDiv) {
+        removeOverlayDivs();
+        createOverlays(request.color)
+      }
+
+      changeOverlayColor('overlay-diva', request.color);
+
     } else if (request.itemList) {
-      const color = localStorage.getItem('highlightColor') || 'rgba(255, 0, 0, 0.5)';
-        createOverlaysForItems(request.itemList, request.color);
+        const color = localStorage.getItem('highlightColor') || 'rgba(255, 0, 0, 0.5)';
+        console.log(request.itemList)
+        createOverlaysForItems(request.itemList, color);
     }
 });
 
+function changeOverlayColor(className, color) {
+    if (color != undefined){
+      var highlightColor =  hexToRgba(color)
+    }
+    else{
+      var highlightColor = 'rgba(255, 0, 0, 0.5)'
+    }
+    // Select all elements with the specified class name
+    const overlays = document.querySelectorAll(`.${className}`);
+    const elementsWithOverlayClass = document.querySelectorAll('.overlay-diva');
+
+    // Remove existing elements
+    overlays.forEach(overlay => {
+        overlay.style.backgroundColor = highlightColor;
+    });
+
+
+}
+
 function createOverlaysForItems(itemList, color) {
+    // Check if 'usemap' is in the item list
+    const usemapIndex = itemList.indexOf('usemap');
+    if (usemapIndex !== -1) {
+        // Run createOverlays
+        createOverlays(color);
+
+        // Remove 'usemap' from the item list
+        itemList.splice(usemapIndex, 1);
+    }
+
+    // If itemList is provided, create overlay-div elements for each item
     itemList.forEach(item => {
         const elements = document.querySelectorAll(item);
         elements.forEach(element => {
             const overlayDiv = document.createElement('div');
-            overlayDiv.classList.add('overlay-div');
+            overlayDiv.classList.add('overlay-diva');
             const highlightColor = hexToRgba(color);
             overlayDiv.style.backgroundColor = highlightColor;
             overlayDiv.style.position = 'absolute';

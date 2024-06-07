@@ -15,13 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    toggleCheckbox.on('change', function () {
-        const status = toggleCheckbox.prop('checked') ? 'on' : 'off';
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            const tab = tabs[0];
-            chrome.tabs.sendMessage(tab.id, { status: status });
-        });
-    });
+    // Toggle button click event
+     toggleButton.addEventListener('click', function () {
+         console.log('click')
+         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+             const tab = tabs[0];
+             chrome.tabs.sendMessage(tab.id, { status: 'off' });
+         });
+     });
 
     // Fetch extension status and update toggle checkbox
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
